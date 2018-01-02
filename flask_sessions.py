@@ -6,6 +6,9 @@ users = {'chaitanya', 'cersei', 'tyrion'}
 
 @app.route('/')
 def index():
+    if session.get('logged_in'):
+        return redirect(url_for('user', user_name=session['user_name']))
+
     return '''
         you are not logged in.<br>
         <a href='/login'>Click here to login</a>
@@ -13,13 +16,16 @@ def index():
 
 @app.route('/<user_name>')
 def user(user_name):
-    if session['logged_in'] == True:
+    if session.get('logged_in') and session.get('user_name') == user_name:
         return "Weclome " + user_name + "<br> \
             <p><a href='/logout'>Click to Log Out</a><p>"
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if session.get('logged_in'):
+        return 'You are already logged in'
+
     if request.method == 'GET':
         return '''
             <p><h2>Enter your username to login</h2></p>
@@ -30,13 +36,14 @@ def login():
         '''
     if request.form['user_name'] in users:
         session['logged_in'] = True
+        session['user_name'] = request.form['user_name']
         return redirect(url_for('user', user_name=request.form['user_name']))
 
     return "Please register first"
 
 @app.route('/logout')
 def logout():
-    if session['logged_in'] == True:
+    if session.get('logged_in'):
         session['logged_in'] = False
         return "Logged out"
     else:
